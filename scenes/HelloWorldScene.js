@@ -16,22 +16,22 @@ export default class HelloWorldScene extends Phaser.Scene {
 
   preload() {
     // load assets
-    this.load.image("sky", "./assets/space3.png");
-    this.load.image("logo", "./assets/phaser3-logo.png");
+    this.load.image("pong", "./public/assets/Ball.png");
+    this.load.image("palet", "./public/assets/Player90.png");
     this.load.image("red", "./assets/particles/red.png");
   }
 
   create() {
 
     // Paleta
-    this.paddle = this.physics.add.image(400, 550, "logo").setImmovable();
+    this.paddle = this.physics.add.image(400, 550, "palet").setImmovable();
     this.paddle.body.allowGravity = false;
     this.paddle.setCollideWorldBounds(true);
-    this.paddle.setScale(3, 0.3); // Ajusta el tamaño de la paleta
+    this.paddle.setScale(1, 1); // Ajusta el tamaño de la paleta
 
     // Pelota
-    this.ball = this.physics.add.image(400, 500, "red");
-    this.ball.body.allowGravity = false; // Desactiva la gravedad para la pelota
+    this.ball = this.physics.add.image(400, 500, "pong"); // Cambiado a "pong"
+    this.ball.body.allowGravity = false;
     this.ball.setCollideWorldBounds(true).setScale(0.5);
     this.ball.setBounce(1);
     this.ball.setVelocity(0, -350);
@@ -61,9 +61,27 @@ export default class HelloWorldScene extends Phaser.Scene {
     this.physics.add.collider(this.ball, this.bricks, (ball, brick) => {
       brick.destroy(); // Destruye el ladrillo al colisionar
     });
+
+    // Estado de juego
+    this.gameOver = false;
+
+    // Textos de "Perdiste" y "Reiniciar"
+    this.loseText = this.add.text(400, 300, '', { fontSize: '48px', fill: '#fff' }).setOrigin(0.5);
+    this.restartText = this.add.text(400, 360, '', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5);
+
+    // Tecla R para reiniciar
+    this.restartKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R);
   }
 
   update() {
+    if (this.gameOver) {
+      // Espera a que el jugador presione "R"
+      if (Phaser.Input.Keyboard.JustDown(this.restartKey)) {
+        this.scene.restart();
+      }
+      return;
+    }
+
     // Movimiento de la paleta
     if (this.cursors.left.isDown) {
       this.paddle.setVelocityX(-350);
@@ -73,10 +91,12 @@ export default class HelloWorldScene extends Phaser.Scene {
       this.paddle.setVelocityX(0);
     }
 
-    // Si la pelota cae abajo, reiníciala
-    if (this.ball.y > 600) {
-      this.ball.setPosition(400, 500);
-      this.ball.setVelocity(0, -350);
+    // Si la pelota cae abajo, muestra mensaje de perder
+    if (this.ball.y > 590) {
+      this.gameOver = true;
+      this.ball.setVelocity(0, 0);
+      this.loseText.setText('Perdiste');
+      this.restartText.setText('Reiniciar con tecla "R"');
     }
   }
 }
